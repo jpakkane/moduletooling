@@ -2,8 +2,23 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2023 Jussi Pakkanen
 
-import argparse, sys, os
+import argparse, sys, os, time
+
+p = argparse.ArgumentParser(prog='Fake compiler')
+p.add_argument('-o', dest='objfile', required=True)
+p.add_argument('sources', nargs='+')
+p.add_argument('-d', help='Execution time in seconds', type=int, default=1)
+
+def compile():
+    args = p.parse_args()
+    if len(args.sources) != 1:
+        sys.exit('Must have exactly one source, got: ' + str( args.sources))
+    if not os.path.exists(args.sources[0]):
+        sys.exit(f'Source file {args.sources[0]} does not exist.'))
+    time.sleep(args.d)
+    with open(args.o, 'w') as objfile:
+        objfile.write('This is an object file.\n')
 
 if __name__ == '__main__':
-    pass
+    compile()
 

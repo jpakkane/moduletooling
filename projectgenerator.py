@@ -2,7 +2,28 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2023 Jussi Pakkanen
 
-import argparse, sys, os
+import argparse, sys, os, pathlib
+
+p = argparse.ArgumentParser(prog='Module test project generator')
+p.add_argument('--source', help='Root dir for sources.', required=True)
+p.add_argument('--build', help='Root dir for build.', required=True)
+
+def generate():
+    args = p.parse_args()
+    if os.path.exists(args.source):
+        sys.exit('Source dir already exists.')
+    if os.path.exists(args.build):
+        sys.exit('Build dir already exists.')
+    srcdir = pathlib.Path(args.source)
+    builddir = pathlib.Path(args.build)
+    ninjafile = builddir / 'build.ninja'
+    builddir.mkdir()
+    with open(ninjafile, "w") as n:
+        n.write('ninja_required_version = 1.11.2\n\n')
+        n.write('# Rules\n\n')
+        n.write('# Actual work steps\n\n')
+        n.write('# The all important all target\n\n')
+        n.write('default all\n')
 
 if __name__ == '__main__':
-    pass
+    generate()
