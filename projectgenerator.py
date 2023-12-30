@@ -37,6 +37,11 @@ def create_rules(ninjafile):
     ninjafile.write(' description = Linking target $out\n')
     ninjafile.write('\n')
 
+    ninjafile.write('rule command\n')
+    ninjafile.write(' command = $COMMAND\n')
+    ninjafile.write(' description = $DESC\n')
+    ninjafile.write('\n')
+
 def write_compilations(ninjafile, build_to_src, srclist):
     objfiles = []
     for src in srclist:
@@ -79,6 +84,11 @@ def generate():
         srclist = create_sources(srcdir, 'target0src%d.cpp')
         objlist = write_compilations(n, build_to_src, srclist)
         write_link(n, output, objlist)
+        n.write('# Housekeeping targets\n\n')
+        n.write(f'build clean: phony actualclean\n\n')
+        n.write(f'build actualclean: command\n')
+        n.write( ' COMMAND = ninja -t clean\n')
+        n.write( ' description = Cleaning\n\n')
         n.write('# The all important all target\n\n')
         n.write(f'build all: phony {output}\n\n')
         n.write('default all\n')
