@@ -17,8 +17,12 @@ def compile():
     if not os.path.exists(cppfile):
         sys.exit(f'Source file {cppfile} does not exist.')
     time.sleep(args.d)
+    depfile = args.objfile + '.d'
     with open(args.objfile, 'w') as objfile:
         objfile.write('This is an object file.\n')
+    with open(depfile, 'w') as objfile:
+        # Does not handle spaces in paths.
+        objfile.write(f'{args.objfile}: {cppfile}\n')
 
 if __name__ == '__main__':
     compile()

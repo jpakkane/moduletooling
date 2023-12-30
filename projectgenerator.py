@@ -27,8 +27,8 @@ def create_rules(ninjafile):
 
     ninjafile.write('rule compiler\n')
     ninjafile.write(f' command = {compiler} $args -o $out $in\n')
-    #ninjafile.write(' deps = gcc')
-    #ninjafile.write(' depfile = $DEPFILE')
+    ninjafile.write(' deps = gcc\n')
+    ninjafile.write(' depfile = $DEPFILE\n')
     ninjafile.write(' description = Compiling source file $out\n')
     ninjafile.write('\n')
 
@@ -46,11 +46,12 @@ def write_compilations(ninjafile, build_to_src, srclist):
     objfiles = []
     for src in srclist:
         objfile = pathlib.Path(src.name).with_suffix('.o')
+        depfile = str(objfile) + '.d'
         objfiles.append(objfile)
         rel_src = build_to_src / src
         ninjafile.write(f'build {objfile}: compiler {rel_src}\n')
         ninjafile.write(' args = \n')
-        #ninjafile.write(' DEPFILE = ...\n')
+        ninjafile.write(f' DEPFILE = {depfile}\n')
         ninjafile.write(' \n')
     return objfiles
 
