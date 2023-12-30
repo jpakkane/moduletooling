@@ -9,16 +9,16 @@ p.add_argument('-o', dest='output', required=True)
 p.add_argument('objs', nargs='+')
 p.add_argument('-d', help='Execution time in seconds', type=int, default=1)
 
-def compile():
+def link():
     args = p.parse_args()
     for o in args.objs:
         if not os.path.exists(o):
-            sys.exit(f'Input file {o} does not exist.'))
+            sys.exit(f'Input file {o} does not exist.')
     time.sleep(args.d)
     with open(args.output, 'w') as outfile:
-        if args.output.endswith('.a') or args.output.ends_with('.lib'):
+        if args.output.endswith('.a') or args.output.endswith('.lib'):
             outfile.write('This is a static library file.\n')
-        elif args.output.endswith('.so') or args.output.ends_with('.dll'):
+        elif args.output.endswith('.so') or args.output.endswith('.dll'):
             outfile.write('This is a shared library file.\n')
         else:
             outfile.write('This is an executable file.\n')

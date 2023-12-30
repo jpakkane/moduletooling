@@ -13,10 +13,11 @@ def compile():
     args = p.parse_args()
     if len(args.sources) != 1:
         sys.exit('Must have exactly one source, got: ' + str( args.sources))
-    if not os.path.exists(args.sources[0]):
-        sys.exit(f'Source file {args.sources[0]} does not exist.'))
+    cppfile = args.sources[0]
+    if not os.path.exists(cppfile):
+        sys.exit(f'Source file {cppfile} does not exist.')
     time.sleep(args.d)
-    with open(args.o, 'w') as objfile:
+    with open(args.objfile, 'w') as objfile:
         objfile.write('This is an object file.\n')
 
 if __name__ == '__main__':
