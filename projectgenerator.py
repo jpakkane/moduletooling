@@ -86,7 +86,7 @@ def write_compilations(ninjafile, target_name, build_to_src, srclist):
     
     # Dependency scanner
     sources_string = ' '.join([str(x) for x in all_sources])
-    ninjafile.write(f'build {target_dd}: scan {sources_string}\n')
+    ninjafile.write(f'build {target_dd}: scan {sources_string}\n\n')
     #ninjafile.write(f' args = --mod-out-dir=...')
     return objfiles
 
