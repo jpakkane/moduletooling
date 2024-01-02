@@ -39,7 +39,8 @@ def create_sources(path, template):
 def create_rules(ninjafile):
     tooldir = pathlib.Path(__file__).parent
     compiler = tooldir / 'compiler.py'
-    linker= tooldir / 'linker.py'
+    linker = tooldir / 'linker.py'
+    scanner = tooldir / 'scanner.py'
     assert(compiler.is_file())
 
     ninjafile.write('rule compiler\n')
@@ -54,22 +55,39 @@ def create_rules(ninjafile):
     ninjafile.write(' description = Linking target $out\n')
     ninjafile.write('\n')
 
+    ninjafile.write('rule scan\n')
+    ninjafile.write(f' command = {scanner} -o $out ${{args}} ${{in}}\n')
+    ninjafile.write(' description = Scanning deps of $in.\n')
+    ninjafile.write('\n')
+
     ninjafile.write('rule command\n')
     ninjafile.write(' command = $COMMAND\n')
     ninjafile.write(' description = $DESC\n')
     ninjafile.write('\n')
 
-def write_compilations(ninjafile, build_to_src, srclist):
+
+def write_compilations(ninjafile, target_name, build_to_src, srclist):
     objfiles = []
+    target_dd = target_name + '.dd'
+    all_sources = []
     for src in srclist:
+        # Compilation
         objfile = pathlib.Path(src.name).with_suffix('.o')
+        ddfile = objfile.with_suffix('.dd')
         depfile = str(objfile) + '.d'
         objfiles.append(objfile)
         rel_src = build_to_src / src
-        ninjafile.write(f'build {objfile}: compiler {rel_src}\n')
+        all_sources.append(rel_src)
+        ninjafile.write(f'build {objfile}: compiler {rel_src} || {target_dd}\n')
         ninjafile.write(' args = \n')
         ninjafile.write(f' DEPFILE = {depfile}\n')
+        ninjafile.write(f' dyndep = {target_dd}\n')
         ninjafile.write(' \n')
+    
+    # Dependency scanner
+    sources_string = ' '.join([str(x) for x in all_sources])
+    ninjafile.write(f'build {target_dd}: scan {sources_string}\n')
+    #ninjafile.write(f' args = --mod-out-dir=...')
     return objfiles
 
 def write_link(ninjafile, output, objlist):
@@ -91,6 +109,7 @@ def generate():
     builddir = pathlib.Path(args.build)
     build_to_src = '..' / srcdir # FIXME
     ninjafile = builddir / 'build.ninja'
+    target_name = 'simple'
     srcdir.mkdir()
     builddir.mkdir()
     with open(ninjafile, "w") as n:
@@ -100,7 +119,7 @@ def generate():
         create_rules(n)
         n.write('# Actual work steps\n\n')
         srclist = create_sources(srcdir, 'target0src%d')
-        objlist = write_compilations(n, build_to_src, srclist)
+        objlist = write_compilations(n, target_name, build_to_src, srclist)
         write_link(n, output, objlist)
         n.write('# Housekeeping targets\n\n')
         n.write(f'build clean: phony actualclean\n\n')
