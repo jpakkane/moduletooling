@@ -34,17 +34,20 @@ def parse_source(srcfile):
             export = modname
     return ParseResults(export, imports)
 
-def verify_imports(search_dirs, modules):
-    for m in modules:
+def verify_imports(search_dirs, imported_modules):
+    imported_module_files = []
+    for m in imported_modules:
         mfile = module2filename(m)
         found = False
         for d in search_dirs:
             trial = os.path.join(d, mfile)
             if os.path.exists(trial):
                 found = True
+                imported_module_files.append(trial)
                 break
         if not found:
             sys.exit(f'Module {m} could not be found.')
+    return imported_module_files
 
 def compile():
     args = p.parse_args()
@@ -54,20 +57,25 @@ def compile():
     if not os.path.exists(cppfile):
         sys.exit(f'Source file {cppfile} does not exist.')
     presults = parse_source(cppfile)
+    module_search_dirs = ['.']
+    imported_module_files = verify_imports(module_search_dirs, presults.imports)
     time.sleep(args.d)
     depfile = args.objfile + '.d'
-    modfile = None
+    modfile_name = None
     if presults.export:
-        modfile = os.path.join(args.moddir, module2filename(presults.export))
-        with open(modfile, 'w') as modfile:
+        modfile_name = os.path.join(args.moddir, module2filename(presults.export))
+        with open(modfile_name, 'w') as modfile:
             modfile.write('This is a module file.\n')
     with open(args.objfile, 'w') as objfile:
         objfile.write('This is an object file.\n')
     with open(depfile, 'w') as depfile:
         # Does not handle spaces in paths.
-        depfile.write(f'{args.objfile}: {cppfile}\n')
-        if modfile:
-            depfile.write(f'{modfile}: {cppfile}\n')
+        depfile.write(f'{args.objfile}: {cppfile}')
+        for mf in imported_module_files:
+            depfile.write(f' {mf}')
+        depfile.write('\n')
+        if modfile_name:
+            depfile.write(f'{modfile_name}: {cppfile}\n')
 
 if __name__ == '__main__':
     compile()
