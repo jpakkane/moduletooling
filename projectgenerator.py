@@ -1,22 +1,39 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-# Copyright 2023 Jussi Pakkanen
+# Copyright 2024 Jussi Pakkanen
 
-import argparse, sys, os, pathlib
+import argparse, sys, os, pathlib, random
 
 p = argparse.ArgumentParser(prog='Module test project generator')
 p.add_argument('--source', help='Root dir for sources.', required=True)
 p.add_argument('--build', help='Root dir for build.', required=True)
 
+def gen_imports(template, i):
+    imports = []
+    if i < 1:
+        return imports
+    used_imports = set()
+    num_imports = random.randrange(min(i, 4))
+    while len(used_imports) < num_imports:
+        modnum = random.randrange(i)
+        if modnum not in used_imports:
+            used_imports.add(modnum)
+            imports.append(template % modnum)
+    return imports
+
 def create_sources(path, template):
     srclist = []
     num_sources = 10
     for i in range(num_sources):
-        fname = pathlib.Path(template % i)
+        fname = pathlib.Path(template % i).with_suffix('.cpp')
+        modulename = template % i
         srclist.append(fname)
         full_name = path / fname
         with open(full_name, 'w') as ofile:
-            ofile.write('This is a source file.\n')
+            ofile.write(f'export {modulename}\n\n')
+            imports = gen_imports(template, i)
+            for imp in imports:
+                ofile.write(f'import {imp}\n')
     return srclist
 
 def create_rules(ninjafile):
@@ -82,7 +99,7 @@ def generate():
         n.write('# Rules\n\n')
         create_rules(n)
         n.write('# Actual work steps\n\n')
-        srclist = create_sources(srcdir, 'target0src%d.cpp')
+        srclist = create_sources(srcdir, 'target0src%d')
         objlist = write_compilations(n, build_to_src, srclist)
         write_link(n, output, objlist)
         n.write('# Housekeeping targets\n\n')

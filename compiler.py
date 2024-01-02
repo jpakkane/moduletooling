@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-# Copyright 2023 Jussi Pakkanen
+# Copyright 2024 Jussi Pakkanen
 
 import argparse, sys, os, time
 
@@ -8,6 +8,43 @@ p = argparse.ArgumentParser(prog='Fake compiler')
 p.add_argument('-o', dest='objfile', required=True)
 p.add_argument('sources', nargs='+')
 p.add_argument('-d', help='Execution time in seconds', type=int, default=1)
+p.add_argument('--mod-out-dir', dest='moddir', default='.')
+
+def module2filename(modname):
+    return modname + '.mod'
+
+class ParseResults:
+    def __init__(self, export, imports):
+        self.export = export
+        self.imports = imports
+
+def parse_source(srcfile):
+    imports = []
+    export = ''
+    for line in open(srcfile):
+        line = line.strip()
+        if not line:
+            continue
+        [command, modname] = line.split(' ')
+        if command == 'import':
+            imports.append(modname)
+        elif command == 'export':
+            if export:
+                sys.exit('Export module declared twice.')
+            export = modname
+    return ParseResults(export, imports)
+
+def verify_imports(search_dirs, modules):
+    for m in modules:
+        mfile = module2filename(m)
+        found = False
+        for d in search_dirs:
+            trial = os.path.join(d, mfile)
+            if os.path.exists(trial):
+                found = True
+                break
+        if not found:
+            sys.exit(f'Module {m} could not be found.')
 
 def compile():
     args = p.parse_args()
@@ -16,14 +53,21 @@ def compile():
     cppfile = args.sources[0]
     if not os.path.exists(cppfile):
         sys.exit(f'Source file {cppfile} does not exist.')
+    presults = parse_source(cppfile)
     time.sleep(args.d)
     depfile = args.objfile + '.d'
+    modfile = None
+    if presults.export:
+        modfile = os.path.join(args.moddir, module2filename(presults.export))
+        with open(modfile, 'w') as modfile:
+            modfile.write('This is a module file.\n')
     with open(args.objfile, 'w') as objfile:
         objfile.write('This is an object file.\n')
-    with open(depfile, 'w') as objfile:
+    with open(depfile, 'w') as depfile:
         # Does not handle spaces in paths.
-        objfile.write(f'{args.objfile}: {cppfile}\n')
+        depfile.write(f'{args.objfile}: {cppfile}\n')
+        if modfile:
+            depfile.write(f'{modfile}: {cppfile}\n')
 
 if __name__ == '__main__':
     compile()
-

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-# Copyright 2023 Jussi Pakkanen
+# Copyright 2024 Jussi Pakkanen
 
 import os, sys, subprocess, shutil, pathlib
 
